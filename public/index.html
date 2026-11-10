@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ArchAgent</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+    :root, html[data-theme="dark"] {
+      --bg-main: #0d0d0d;
+      --bg-sidebar: #141414;
+      --bg-composer: #1c1c1c;
+      --bg-card: #151515;
+      --bg-card-sub: #111111;
+      --bg-user-bubble: #212121;
+      --bg-pill: rgba(255, 255, 255, 0.05);
+      --bg-pill-hover: rgba(255, 255, 255, 0.10);
+      --bg-active: rgba(255, 255, 255, 0.13);
+      --border: rgba(255, 255, 255, 0.07);
+      --border-strong: rgba(255, 255, 255, 0.20);
+      --text-primary: #ececec;
+      --text-secondary: #9b9b9b;
+      --text-muted: #666666;
+      --btn-submit-bg: #ffffff;
+      --btn-submit-fg: #090909;
+      --viewport-bg: #090909;
+      --shadow-composer: 0 12px 32px -8px rgba(0, 0, 0, 0.6);
+    }
+
+    html[data-theme="light"] {
+      --bg-main: #ffffff;
+      --bg-sidebar: #f7f7f8;
+      --bg-composer: #f4f4f6;
+      --bg-card: #ffffff;
+      --bg-card-sub: #f8f8fa;
+      --bg-user-bubble: #f0f0f3;
+      --bg-pill: rgba(0, 0, 0, 0.045);
+      --bg-pill-hover: rgba(0, 0, 0, 0.085);
+      --bg-active: rgba(0, 0, 0, 0.10);
+      --border: rgba(0, 0, 0, 0.08);
+      --border-strong: rgba(0, 0, 0, 0.22);
+      --text-primary: #111113;
+      --text-secondary: #55555c;
+      --text-muted: #8e8e95;
+      --btn-submit-bg: #111113;
+      --btn-submit-fg: #ffffff;
+      --viewport-bg: #f1f2f4;
+      --shadow-composer: 0 8px 24px -6px rgba(0, 0, 0, 0.08);
+    }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-primary);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+      -webkit-font-smoothing: antialiased;
+      transition: background-color 0.18s ease, color 0.18s ease;
+    }
+
+    .font-mono {
+      font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+
+    .t-sidebar { background-color: var(--bg-sidebar); border-color: var(--border); }
+    .t-main { background-color: var(--bg-main); }
+    .t-border { border-color: var(--border); }
+    .t-card { background-color: var(--bg-card); border-color: var(--border); }
+    .t-card-sub { background-color: var(--bg-card-sub); border-color: var(--border); }
+    .t-composer {
+      background-color: var(--bg-composer);
+      border-color: var(--border);
+      box-shadow: var(--shadow-composer);
+    }
+    .t-composer:focus-within { border-color: var(--border-strong); }
+    .t-user-bubble { background-color: var(--bg-user-bubble); border-color: var(--border); }
+    .t-pill { background-color: var(--bg-pill); color: var(--text-secondary); }
+    .t-pill:hover { background-color: var(--bg-pill-hover); color: var(--text-primary); }
+    .t-pill-active { background-color: var(--bg-active); color: var(--text-primary); font-weight: 500; }
+    .t-text-primary { color: var(--text-primary); }
+    .t-text-secondary { color: var(--text-secondary); }
+    .t-text-muted { color: var(--text-muted); }
+    .t-viewport { background-color: var(--viewport-bg); }
+    .t-submit { background-color: var(--btn-submit-bg); color: var(--btn-submit-fg); }
+
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 9999px; }
+    details > summary { list-style: none; }
+    details > summary::-webkit-details-marker { display: none; }
+
+    /* Markdown Prose Typography for Assistant Messages */
+    .md-body { font-size: 13.75px; line-height: 1.72; color: var(--text-primary); }
+    .md-body > *:first-child { margin-top: 0 !important; }
+    .md-body > *:last-child { margin-bottom: 0 !important; }
+    .md-body p { margin: 0.5rem 0; }
+    .md-body h1, .md-body h2, .md-body h3, .md-body h4 {
+      font-weight: 600;
+      color: var(--text-primary);
+      line-height: 1.4;
+      margin: 1rem 0 0.4rem;
+    }
+    .md-body h1, .md-body h2 { font-size: 15px; }
+    .md-body h3, .md-body h4 { font-size: 13.75px; }
+    .md-body ul, .md-body ol { margin: 0.45rem 0; padding-left: 1.35rem; }
+    .md-body ul { list-style-type: disc; }
+    .md-body ol { list-style-type: decimal; }
+    .md-body li { margin: 0.28rem 0; padding-left: 0.15rem; }
+    .md-body li::marker { color: var(--text-muted); }
+    .md-body strong { font-weight: 600; color: var(--text-primary); }
+    .md-body code {
+      font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 12px;
+      padding: 0.12rem 0.38rem;
+      border-radius: 0.35rem;
+      background-color: var(--bg-pill);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+    }
+    .md-body pre {
+      margin: 0.6rem 0;
+      padding: 0.75rem 0.9rem;
+      border-radius: 0.65rem;
+      background-color: var(--bg-card-sub);
+      border: 1px solid var(--border);
+      overflow-x: auto;
+    }
+    .md-body pre code {
+      padding: 0;
+      border: 0;
+      background: transparent;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+    .md-body hr {
+      border: 0;
+      border-top: 1px solid var(--border);
+      margin: 0.85rem 0;
+    }
+    .md-body blockquote {
+      margin: 0.55rem 0;
+      padding: 0.2rem 0.75rem;
+      border-left: 2px solid var(--border-strong);
+      color: var(--text-secondary);
+    }
+    .md-body table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0.65rem 0;
+      font-size: 12.5px;
+    }
+    .md-body th, .md-body td {
+      border: 1px solid var(--border);
+      padding: 0.42rem 0.65rem;
+      text-align: left;
+    }
+    .md-body th {
+      background-color: var(--bg-card-sub);
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body class="h-screen flex overflow-hidden select-none">
+
+  <!-- Left Sidebar (Codex Desktop Style) -->
+  <aside id="sidebar" class="w-[244px] t-sidebar border-r flex flex-col shrink-0 transition-colors">
+    <!-- Top Sidebar Bar -->
+    <div class="h-12 px-3.5 flex items-center justify-between">
+      <div class="flex items-center gap-2 text-[13px] font-semibold t-text-primary">
+        <svg class="w-4 h-4 t-text-secondary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6"/>
+        </svg>
+        <span>ArchAgent</span>
+      </div>
+      <button onclick="createNewThread()" title="新建对话" class="h-7 px-2.5 rounded-lg t-pill flex items-center gap-1 text-[12px] transition">
+        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 5v14M5 12h14"/>
+        </svg>
+        <span>新建</span>
+      </button>
+    </div>
+
+    <!-- Thread & Quick File List -->
+    <div class="px-2.5 py-2 flex-1 overflow-y-auto space-y-5">
+      <div>
+        <div class="px-2 pb-1.5 text-[11px] font-medium t-text-muted uppercase tracking-wider">Threads</div>
+        <div id="threadList" class="space-y-0.5">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Thread Area -->
+  <div class="flex-1 flex flex-col min-w-0 t-main">
+
+    <!-- Minimal Thread Header with Theme Toggle (暗色/亮色主题切换) -->
+    <header class="h-12 px-5 border-b t-border flex items-center justify-between shrink-0">
+      <div class="flex items-center gap-2.5">
+        <span id="headerThreadTitle" class="text-[13px] font-medium t-text-primary">新建筑设计会话</span>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button onclick="openSettings()" title="系统提示词" class="text-[12px] px-2.5 py-1 rounded-lg t-pill transition">系统提示词</button>
+        <!-- Theme Switcher Segmented Control -->
+        <div class="flex items-center p-0.5 rounded-lg border t-border t-card-sub">
+          <button
+            id="themeBtnLight"
+            onclick="setTheme('light')"
+            class="px-2.5 py-1 rounded-md text-[11.5px] flex items-center gap-1 transition t-text-secondary"
+          >
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+            </svg>
+            <span>亮色</span>
+          </button>
+          <button
+            id="themeBtnDark"
+            onclick="setTheme('dark')"
+            class="px-2.5 py-1 rounded-md text-[11.5px] flex items-center gap-1 transition t-pill-active"
+          >
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+            </svg>
+            <span>暗色</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Scrollable Conversation Stream -->
+    <main id="chatScroll" class="flex-1 overflow-y-auto px-6 py-8 select-text">
+      <div id="chatContainer" class="max-w-3xl mx-auto space-y-8 pb-6">
+        <!-- Populated dynamically -->
+      </div>
+    </main>
+
+    <!-- Codex-style Bottom Floating Composer -->
+    <footer class="px-6 pb-5 pt-2 shrink-0">
+      <div class="max-w-3xl mx-auto">
+
+        <div class="t-composer border rounded-2xl p-3 transition-colors">
+
+          <!-- Pinned Image or File Attachments -->
+          <div id="attachmentBar" class="hidden items-center gap-1.5 flex-wrap pb-2 mb-2 border-b t-border"></div>
+
+          <!-- Textarea -->
+          <textarea
+            id="chatInput"
+            rows="2"
+            onkeydown="handleKeyDown(event)"
+            placeholder="输入 .skp / .dwg / 图片路径与要求，或直接输入修图指令继续修改上一张图..."
+            class="w-full bg-transparent text-[13.5px] t-text-primary placeholder-[var(--text-muted)] focus:outline-none resize-none leading-relaxed max-h-40"
+          ></textarea>
+
+          <!-- Bottom Composer Controls Bar -->
+          <div class="flex items-center justify-between gap-2 pt-2 mt-1">
+            <!-- Left Controls: Attach + Model Only (Codex Minimal Style) -->
+            <div class="flex flex-1 flex-wrap items-center gap-2 min-w-0">
+              <button
+                onclick="document.getElementById('filePicker').click()"
+                title="上传本地 .skp / .dwg / 图片"
+                class="h-7 px-2.5 rounded-lg t-pill flex shrink-0 items-center gap-1 text-[12px] transition"
+              >
+                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 5v14M5 12h14"/>
+                </svg>
+                <span>File</span>
+              </button>
+              <input type="file" id="filePicker" multiple accept=".skp,.dwg,.dxf,.obj,.png,.jpg,.jpeg,.webp" class="hidden" onchange="handleFilesSelected(event)" />
+
+              <!-- Configured model pickers -->
+              <div class="relative flex flex-1 min-w-[130px] max-w-[245px] items-center t-pill rounded-lg px-2.5 h-7 border t-border transition">
+                <span class="shrink-0 whitespace-nowrap text-[11px] t-text-muted mr-1">对话</span>
+                <select id="brainModelSelect" aria-label="对话模型" class="w-full min-w-0 truncate bg-transparent text-[12px] t-text-primary focus:outline-none cursor-pointer"></select>
+              </div>
+              <div class="relative flex flex-1 min-w-[130px] max-w-[245px] items-center t-pill rounded-lg px-2.5 h-7 border t-border transition">
+                <span class="shrink-0 whitespace-nowrap text-[11px] t-text-muted mr-1">生图</span>
+                <select id="modelSelect" aria-label="生图模型" class="w-full min-w-0 truncate bg-transparent text-[12px] t-text-primary focus:outline-none cursor-pointer"></select>
+              </div>
+            </div>
+
+            <!-- Right Submit Circle Button -->
+            <button
+              id="sendBtn"
+              onclick="sendMessage()"
+              class="w-7 h-7 rounded-full t-submit hover:opacity-85 disabled:opacity-40 flex items-center justify-center transition shrink-0"
+              title="Send (Enter)"
+            >
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 19V5m0 0l-6 6m6-6l6 6"/>
+              </svg>
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- System Prompt Settings Modal -->
+  <div id="settingsModal" class="hidden fixed inset-0 z-50 items-center justify-center bg-black/50 p-4">
+    <div class="t-composer border rounded-2xl p-5 w-full max-w-lg space-y-3">
+      <div class="text-[14px] font-semibold t-text-primary">系统提示词</div>
+      <p class="text-[12px] t-text-secondary leading-relaxed">会在每一轮对话前注入给 Agent，例如设计风格偏好、规范要求、输出习惯。留空则使用内置默认提示词。</p>
+      <textarea id="systemPromptInput" rows="7" placeholder="例如：你是一名擅长现代简约商业建筑的设计师；平面图统一采用 1:100、单位 mm；回复请先给出结论再给出理由。" class="w-full bg-transparent border t-border rounded-lg p-2.5 text-[13px] t-text-primary placeholder-[var(--text-muted)] focus:outline-none resize-none"></textarea>
+      <div class="flex justify-end gap-2">
+        <button onclick="closeSettings()" class="text-[12px] px-3 py-1.5 rounded-lg t-pill transition">取消</button>
+        <button onclick="saveSettings()" class="text-[12px] px-3 py-1.5 rounded-lg t-submit transition">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let messages = [];
+    let pendingAttachments = [];
+    let pinnedTargetImageUrl = '';
+    let pinnedTargetTitle = '';
+    let currentSceneLighting = 'day'; // 'day' (亮景) | 'night' (暗景)
+
+    // Theme Switcher (persisted in localStorage)
+    function setTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      try { localStorage.setItem('arch_theme', theme); } catch (e) {}
+      const btnLight = document.getElementById('themeBtnLight');
+      const btnDark = document.getElementById('themeBtnDark');
+      if (theme === 'light') {
+        btnLight.className = 'px-2.5 py-1 rounded-md text-[11.5px] flex items-center gap-1 transition t-pill-active';
+        btnDark.className = 'px-2.5 py-1 rounded-md text-[11.5px] flex items-center gap-1 transition t-text-secondary';
+      } else {
+        btnDark.className = 'px-2.5 py-1 rounded-md text-[11.5px] flex items-center gap-1 transition t-pill-active';
+        btnLight.className = 'px-2.5 py-1 rounded-md text-[11.5px] flex items-center gap-1 transition t-text-secondary';
+      }
+    }
+
+    (function initTheme() {
+      try {
+        const saved = localStorage.getItem('arch_theme');
+        if (saved === 'light' || saved === 'dark') {
+          setTheme(saved);
+        }
+      } catch (e) {}
+    })();
+
+    // Scene Lighting Switcher (亮景 vs 暗景)
+    function setSceneLighting(mode) {
+      currentSceneLighting = mode;
+    }
+
+    function pinImageForEdit(imgUrl, title) {
+      pinnedTargetImageUrl = imgUrl;
+      pinnedTargetTitle = title;
+      renderAttachmentBar();
+      const input = document.getElementById('chatInput');
+      input.placeholder = `基于「${title}」继续修改，直接输入修改指令...`;
+      input.focus();
+    }
+
+    function clearPinnedImage() {
+      pinnedTargetImageUrl = '';
+      pinnedTargetTitle = '';
+      renderAttachmentBar();
+      document.getElementById('chatInput').placeholder = '输入 .skp / .dwg / 图片路径与要求，或直接输入修图指令继续修改上一张图...';
+    }
+
+    // One-click generate or switch between 亮景 (day) and 暗景 (night) on any result card
+    function switchOrGenerateScene(sliderId, mode, dayUrl, nightUrl, currentAfterUrl, title) {
+      const afterImgEl = document.getElementById(`after-img-${sliderId}`);
+      const singleImgEl = document.getElementById(`single-img-${sliderId}`);
+      const dlEl = document.getElementById(`dl-${sliderId}`);
+      const btnDay = document.getElementById(`scene-day-${sliderId}`);
+      const btnNight = document.getElementById(`scene-night-${sliderId}`);
+
+      const targetUrl = mode === 'day' ? dayUrl : nightUrl;
+      if (targetUrl && targetUrl !== 'null' && targetUrl !== '') {
+        if (afterImgEl) afterImgEl.src = targetUrl;
+        if (singleImgEl) singleImgEl.src = targetUrl;
+        if (dlEl) dlEl.href = targetUrl;
+        if (btnDay && btnNight) {
+          btnDay.className = mode === 'day'
+            ? 'h-full px-2 rounded-md text-[11.5px] t-pill-active transition'
+            : 'h-full px-2 rounded-md text-[11.5px] t-text-secondary hover:opacity-80 transition';
+          btnNight.className = mode === 'night'
+            ? 'h-full px-2 rounded-md text-[11.5px] t-pill-active transition'
+            : 'h-full px-2 rounded-md text-[11.5px] t-text-secondary hover:opacity-80 transition';
+        }
+      } else {
+        // Automatically generate the missing 亮景 or 暗景 version via chat agent
+        setSceneLighting(mode);
+        pinnedTargetImageUrl = currentAfterUrl;
+        pinnedTargetTitle = title;
+        document.getElementById('chatInput').value = mode === 'night'
+          ? '把这张建筑效果图切换为暗景（傍晚蓝调夜景，室内亮起2700K暖光，尽量保持建筑几何结构）'
+          : '把这张建筑效果图切换为亮景（晴朗白天自然阳光，蓝天白云，尽量保持建筑几何结构）';
+        sendMessage();
+      }
+    }
+
+    function handleFilesSelected(e) {
+      const files = Array.from(e.target.files || []);
+      files.forEach(file => {
+        const reader = new FileReader();
+        reader.onload = ev => {
+          pendingAttachments.push({ name: file.name, dataUrl: ev.target.result });
+          renderAttachmentBar();
+        };
+        reader.readAsDataURL(file);
+      });
+      e.target.value = '';
+    }
+
+    function removeAttachment(idx) {
+      pendingAttachments.splice(idx, 1);
+      renderAttachmentBar();
+    }
+
+    function renderAttachmentBar() {
+      const bar = document.getElementById('attachmentBar');
+      const chips = [];
+
+      if (pinnedTargetImageUrl) {
+        chips.push(`
+          <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-lg t-pill border t-border text-[12px] t-text-primary">
+            <img src="${pinnedTargetImageUrl}" class="w-4 h-4 rounded object-cover" />
+            <span class="truncate max-w-[240px]">Editing: ${escapeHtml(pinnedTargetTitle)}</span>
+            <button onclick="clearPinnedImage()" class="t-text-secondary hover:opacity-100 ml-1">✕</button>
+          </div>
+        `);
+      }
+
+      pendingAttachments.forEach((att, idx) => {
+        chips.push(`
+          <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg t-pill border t-border text-[12px] font-mono t-text-primary">
+            <span>${escapeHtml(att.name)}</span>
+            <button onclick="removeAttachment(${idx})" class="t-text-secondary hover:opacity-100 ml-1">✕</button>
+          </div>
+        `);
+      });
+
+      if (chips.length > 0) {
+        bar.innerHTML = chips.join('');
+        bar.classList.remove('hidden');
+        bar.classList.add('flex');
+      } else {
+        bar.innerHTML = '';
+        bar.classList.add('hidden');
+        bar.classList.remove('flex');
+      }
+    }
+
+    function handleKeyDown(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    }
+
+    function updateCardSlider(sliderId, val) {
+      const clip = document.getElementById(`clip-${sliderId}`);
+      const handle = document.getElementById(`handle-${sliderId}`);
+      if (clip) clip.style.clipPath = `inset(0 ${100 - val}% 0 0)`;
+      if (handle) handle.style.left = `${val}%`;
+    }
+
+    function switchCardTab(sliderId, mode) {
+      const compareView = document.getElementById(`compare-${sliderId}`);
+      const singleView = document.getElementById(`single-${sliderId}`);
+      const origView = document.getElementById(`orig-${sliderId}`);
+      ['compare', 'single', 'orig'].forEach(m => {
+        const btn = document.getElementById(`btn-${m}-${sliderId}`);
+        if (btn) {
+          btn.className = m === mode
+            ? 'h-full px-2 rounded-md text-[11.5px] t-pill-active transition'
+            : 'h-full px-2 rounded-md text-[11.5px] t-text-secondary hover:opacity-80 transition';
+        }
+      });
+      if (compareView) compareView.style.display = mode === 'compare' ? 'block' : 'none';
+      if (singleView) singleView.style.display = mode === 'single' ? 'flex' : 'none';
+      if (origView) origView.style.display = mode === 'orig' ? 'flex' : 'none';
+    }
+
+    function renderMessages() {
+      const container = document.getElementById('chatContainer');
+      if (!messages || messages.length === 0) {
+        container.innerHTML = `
+          <div class="py-24 text-center space-y-3">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full t-pill text-[11.5px] font-mono t-text-secondary">
+              <span>建筑设计工作台</span>
+              <span>·</span>
+              <span>CAD 图纸 · 体块模型 · 建筑可视化</span>
+            </div>
+            <h2 class="text-[18px] font-semibold t-text-primary">将设计条件转化为图纸与可视化方案</h2>
+            <p class="text-[13px] t-text-secondary max-w-lg mx-auto leading-relaxed">
+              上传 <code class="font-mono">.dwg</code> / <code class="font-mono">.dxf</code> 图纸、<code class="font-mono">.skp</code> 模型或参考图片，并说明设计目标与关键参数。可进行图纸几何与坐标检查、规划指标测算、标准层 CAD 绘制、建筑体块建模，以及效果图和彩色平面图生成。
+            </p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = messages.map((msg, mIdx) => {
+        if (msg.role === 'user') {
+          const filePills = (msg.detectedFiles || []).map(f => `
+            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md t-pill border t-border text-[11.5px] font-mono t-text-primary">
+              <svg class="w-3 h-3 t-text-secondary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+              </svg>
+              <span>${escapeHtml(cleanFileName(f.name))}</span>
+            </span>
+          `).join('');
+
+          return `
+            <div class="flex justify-end">
+              <div class="max-w-[78%] rounded-2xl t-user-bubble border px-3.5 py-2 space-y-1.5">
+                ${filePills ? `<div class="flex flex-wrap gap-1.5">${filePills}</div>` : ''}
+                <div class="text-[13.5px] t-text-primary whitespace-pre-wrap leading-relaxed">${escapeHtml(msg.text)}</div>
+              </div>
+            </div>
+          `;
+        }
+
+        if (msg.id === 'temp-loading') {
+          return `
+            <div class="flex items-center gap-2.5 py-1 text-[13px] t-text-secondary">
+              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span>${escapeHtml(msg.text)}</span>
+            </div>
+          `;
+        }
+
+        // Only surface actual architectural tool calls (or errors); hide internal intake/planner plumbing on pure chat turns
+        const visibleTraces = (msg.toolTraces || []).filter(t =>
+          t.error || (t.node !== 'intake_node' && t.tool !== 'StateGraph:intake' && !String(t.tool || '').startsWith('ChatOpenAI'))
+        );
+        const totalMs = visibleTraces.reduce((sum, t) => sum + (Number(t.durationMs) || 0), 0);
+        const toolChips = visibleTraces.map(t => `
+          <span class="px-1.5 py-0.5 rounded t-pill text-[11px] font-normal">${escapeHtml(t.label || t.tool || '工具')}</span>
+        `).join('');
+
+        const traceRowsHtml = visibleTraces.map(t => `
+          <div class="flex items-start justify-between gap-3 py-1.5 border-b t-border last:border-b-0">
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <span class="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full text-[9px] font-bold ${t.error ? 'bg-red-500/20 text-red-400' : 'bg-emerald-500/20 text-emerald-400'}">${t.error ? '!' : '✓'}</span>
+                <span class="text-[11.5px] font-medium t-text-primary">${escapeHtml(t.label || '')}</span>
+                <span class="px-1.5 py-0.5 rounded t-pill font-mono text-[10px]">${escapeHtml(t.tool || '')}</span>
+              </div>
+              <div class="text-[11.5px] t-text-secondary mt-0.5 leading-relaxed break-words pl-5">${escapeHtml(cleanFileName(t.summary || ''))}</div>
+            </div>
+            <span class="text-[10.5px] font-mono t-text-muted shrink-0">${formatDuration(t.durationMs)}</span>
+          </div>
+        `).join('');
+
+        const stepsAccordion = visibleTraces.length > 0 ? `
+          <details class="group rounded-xl t-card-sub border px-3 py-2">
+            <summary class="cursor-pointer flex items-center justify-between gap-2 text-[12px] t-text-secondary select-none">
+              <div class="flex items-center gap-1.5 flex-wrap min-w-0">
+                <svg class="w-3.5 h-3.5 transition-transform group-open:rotate-90 t-text-muted shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="9 18 15 12 9 6"/>
+                </svg>
+                <span class="font-medium t-text-primary">已调用 ${visibleTraces.length} 个工具</span>
+                <div class="flex items-center gap-1 flex-wrap">${toolChips}</div>
+              </div>
+              <span class="text-[11px] font-mono t-text-muted shrink-0">${formatDuration(totalMs)}${msg.createdAt ? ` · ${escapeHtml(msg.createdAt)}` : ''}</span>
+            </summary>
+            <div class="mt-2 pt-2 border-t t-border space-y-0.5 text-[11.5px]">
+              ${traceRowsHtml}
+            </div>
+          </details>
+        ` : '';
+
+        const dlIcon = `<svg class="w-3 h-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v11m0 0l-4-4m4 4l4-4M4 19h16"/></svg>`;
+
+        const resultsHtml = (msg.results || []).map((r, rIdx) => {
+          const sliderId = `s_${mIdx}_${rIdx}`;
+          const hasBefore = Boolean(r.beforeImage);
+          const dayUrl = r.dayImage || '';
+          const nightUrl = r.nightImage || '';
+          const isNightActive = r.sceneMode === 'night';
+          const isCadOr3d = Boolean(r.dwgFile || r.dxfFile || r.objFile);
+
+          return `
+            <div class="rounded-xl t-card border overflow-hidden">
+              <!-- Card Top Header -->
+              <div class="px-3.5 py-2 border-b t-border flex items-center justify-between gap-3">
+                <div class="flex items-center gap-2 min-w-0 flex-1">
+                  <span class="text-[13px] font-medium t-text-primary truncate" title="${escapeHtml(cleanFileName(r.title || ''))}">${escapeHtml(cleanCardTitle(r.title || ''))}</span>
+                </div>
+
+                <div class="flex items-center gap-1.5 shrink-0">
+                  ${hasBefore ? `
+                    <div class="h-7 p-0.5 rounded-lg border t-border t-card-sub flex items-center">
+                      <button id="btn-compare-${sliderId}" onclick="switchCardTab('${sliderId}', 'compare')" class="h-full px-2 rounded-md text-[11.5px] t-pill-active transition">对比</button>
+                      <button id="btn-single-${sliderId}" onclick="switchCardTab('${sliderId}', 'single')" class="h-full px-2 rounded-md text-[11.5px] t-text-secondary hover:opacity-80 transition">结果</button>
+                      <button id="btn-orig-${sliderId}" onclick="switchCardTab('${sliderId}', 'orig')" class="h-full px-2 rounded-md text-[11.5px] t-text-secondary hover:opacity-80 transition">原图</button>
+                    </div>
+                  ` : ''}
+
+                  ${isCadOr3d ? `
+                    ${r.objFile ? `
+                    <a href="${r.objFile}" download class="h-7 px-2.5 rounded-lg t-submit hover:opacity-85 inline-flex items-center gap-1 text-[11.5px] font-mono font-medium transition">
+                      ${dlIcon}<span>.OBJ</span>
+                    </a>` : ''}
+                    ${r.dwgFile ? `
+                    <a href="${r.dwgFile}" download class="h-7 px-2.5 rounded-lg ${r.objFile ? 't-pill border t-border' : 't-submit hover:opacity-85'} inline-flex items-center gap-1 text-[11.5px] font-mono font-medium transition">
+                      ${dlIcon}<span>.DWG</span>
+                    </a>` : ''}
+                    ${r.dxfFile ? `
+                    <a href="${r.dxfFile}" download class="h-7 px-2.5 rounded-lg t-pill border t-border inline-flex items-center gap-1 text-[11.5px] font-mono transition">
+                      ${dlIcon}<span>.DXF</span>
+                    </a>` : ''}
+                  ` : `
+                    <div class="h-7 p-0.5 rounded-lg border t-border t-card-sub flex items-center" title="切换或生成日景 / 夜景">
+                      <button
+                        id="scene-day-${sliderId}"
+                        onclick="switchOrGenerateScene('${sliderId}', 'day', ${jsArg(dayUrl)}, ${jsArg(nightUrl)}, ${jsArg(r.afterImage)}, ${jsArg(r.title || '')})"
+                        class="h-full px-2 rounded-md text-[11.5px] ${!isNightActive ? 't-pill-active' : 't-text-secondary hover:opacity-80'} transition"
+                      >日景</button>
+                      <button
+                        id="scene-night-${sliderId}"
+                        onclick="switchOrGenerateScene('${sliderId}', 'night', ${jsArg(dayUrl)}, ${jsArg(nightUrl)}, ${jsArg(r.afterImage)}, ${jsArg(r.title || '')})"
+                        class="h-full px-2 rounded-md text-[11.5px] ${isNightActive ? 't-pill-active' : 't-text-secondary hover:opacity-80'} transition"
+                      >夜景</button>
+                    </div>
+                    <button onclick="pinImageForEdit(${jsArg(r.afterImage)}, ${jsArg(cleanCardTitle(r.title || '当前图像'))})" class="h-7 px-2.5 rounded-lg t-pill border t-border text-[11.5px] transition">
+                      继续精修
+                    </button>
+                    <a id="dl-${sliderId}" href="${r.afterImage}" download class="h-7 px-2.5 rounded-lg t-submit hover:opacity-85 inline-flex items-center gap-1 text-[11.5px] font-medium transition">
+                      ${dlIcon}<span>下载</span>
+                    </a>
+                  `}
+                </div>
+              </div>
+
+              <!-- Image Viewport -->
+              ${hasBefore ? `
+                <div id="compare-${sliderId}" class="relative w-full t-viewport select-none" style="aspect-ratio: 16/10; max-height: 480px;">
+                  <img id="after-img-${sliderId}" src="${r.afterImage}" class="w-full h-full object-contain block pointer-events-none" />
+                  <span class="absolute bottom-3 right-3 px-2 py-0.5 rounded bg-black/70 backdrop-blur text-[10.5px] font-mono text-neutral-200 border border-white/10 z-10">
+                    处理后
+                  </span>
+                  <div id="clip-${sliderId}" class="absolute inset-0 overflow-hidden t-viewport" style="clip-path: inset(0 50% 0 0);">
+                    <img src="${r.beforeImage}" class="w-full h-full object-contain block pointer-events-none" />
+                    <span class="absolute bottom-3 left-3 px-2 py-0.5 rounded bg-black/70 backdrop-blur text-[10.5px] font-mono text-neutral-300 border border-white/10">
+                      原图${r.sourceFile ? ` · ${escapeHtml(cleanFileName(r.sourceFile.split('/').pop()))}` : ''}
+                    </span>
+                  </div>
+                  <div id="handle-${sliderId}" class="absolute top-0 bottom-0 w-[1px] bg-white/80 z-20" style="left: 50%;">
+                    <div class="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-6 h-6 rounded-full bg-white text-black text-[10px] font-bold flex items-center justify-center shadow-lg">
+                      ⇄
+                    </div>
+                  </div>
+                  <input type="range" min="0" max="100" value="50" oninput="updateCardSlider('${sliderId}', this.value)" class="absolute inset-0 w-full h-full opacity-0 cursor-ew-resize z-30" />
+                </div>
+                <div id="single-${sliderId}" style="display:none; max-height: 480px;" class="w-full t-viewport justify-center">
+                  <img id="single-img-${sliderId}" src="${r.afterImage}" class="max-h-[480px] object-contain" />
+                </div>
+                <div id="orig-${sliderId}" style="display:none; max-height: 480px;" class="w-full t-viewport justify-center">
+                  <img src="${r.beforeImage}" class="max-h-[480px] object-contain" />
+                </div>
+              ` : `
+                <div class="w-full t-viewport flex justify-center" style="max-height: 480px;">
+                  <img id="after-img-${sliderId}" src="${r.afterImage}" class="max-h-[480px] object-contain" />
+                </div>
+              `}
+
+              <!-- Minimal Caption Bar -->
+              <div class="px-3.5 py-2 t-card-sub border-t text-[12px] t-text-secondary">
+                ${escapeHtml(r.agentNote || '')}
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        return `
+          <div class="space-y-3">
+            ${stepsAccordion}
+            ${msg.text ? `<div class="md-body">${renderMarkdown(msg.text)}</div>` : ''}
+            ${resultsHtml ? `<div class="space-y-4 pt-1">${resultsHtml}</div>` : ''}
+          </div>
+        `;
+      }).join('');
+
+      const scroller = document.getElementById('chatScroll');
+      scroller.scrollTop = scroller.scrollHeight;
+    }
+
+    function escapeHtml(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function jsArg(value) {
+      return escapeHtml(JSON.stringify(String(value || '')));
+    }
+
+    function cleanFileName(name) {
+      return String(name || '').replace(/raw_\d+_/g, '');
+    }
+
+    function cleanCardTitle(title) {
+      return cleanFileName(title)
+        .replace(/^\d+\.\s*(\[[^\]]+\]\s*)?/, '')
+        .replace(/\s*\(\.(?:DWG|DXF|OBJ)[^)]*\)\s*$/i, '')
+        .replace(/\s*（支持[^）]*）\s*$/, '')
+        .replace(/\s*→\s*AI\s*/g, ' · ')
+        .replace(/\s*→\s*/g, ' · ')
+        .replace(/\s*·\s*AI\s+/g, ' · ')
+        .trim();
+    }
+
+    function formatDuration(ms) {
+      const n = Number(ms) || 0;
+      if (!n) return '';
+      return n >= 1000 ? `${(n / 1000).toFixed(1)}s` : `${n}ms`;
+    }
+
+    function cleanLatexExpr(expr) {
+      const supMap = { '0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹' };
+      return expr
+        .replace(/\\text\{([^}]*)\}/g, '$1')
+        .replace(/\\mathrm\{([^}]*)\}/g, '$1')
+        .replace(/\\frac\{([^}]*)\}\{([^}]*)\}/g, '($1) ÷ ($2)')
+        .replace(/\\times/g, '×')
+        .replace(/\\div/g, '÷')
+        .replace(/\\approx/g, '≈')
+        .replace(/\\le/g, '≤')
+        .replace(/\\ge/g, '≥')
+        .replace(/\\%/g, '%')
+        .replace(/\\[,;!]/g, ' ')
+        .replace(/\^\{?([0-9]+)\}?/g, (_, d) => d.split('').map(c => supMap[c] || c).join(''))
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+
+    function formatInlineMd(escaped) {
+      return escaped
+        .replace(/`([^`]+)`/g, '<code>$1</code>')
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/(^|[\s(])\*([^*\n]+)\*(?=[\s).,;!?]|$)/g, '$1<em>$2</em>');
+    }
+
+    function renderMarkdown(raw) {
+      let text = String(raw || '').replace(/\r\n/g, '\n');
+      // Split inline bullet lists ("： - **项**" or "； - **项**") onto their own lines
+      text = text.replace(/([：:；;。])\s+-\s+(?=\*\*)/g, '$1\n- ');
+      // Convert display $$...$$ and inline $...$ LaTeX into clean human-readable text
+      text = text.replace(/\$\$\s*([\s\S]*?)\s*\$\$/g, (_, expr) => `\n\`${cleanLatexExpr(expr)}\`\n`);
+      text = text.replace(/\$([^$\n]+?)\$/g, (_, expr) => cleanLatexExpr(expr));
+
+      const lines = text.split('\n');
+      const out = [];
+      let i = 0;
+
+      while (i < lines.length) {
+        const line = lines[i];
+        const trimmed = line.trim();
+
+        if (!trimmed) { i++; continue; }
+
+        // Fenced code block
+        if (trimmed.startsWith('```')) {
+          const codeLines = [];
+          i++;
+          while (i < lines.length && !lines[i].trim().startsWith('```')) {
+            codeLines.push(escapeHtml(lines[i]));
+            i++;
+          }
+          if (i < lines.length) i++;
+          out.push(`<pre><code>${codeLines.join('\n')}</code></pre>`);
+          continue;
+        }
+
+        // Horizontal rule
+        if (/^(-{3,}|\*{3,})$/.test(trimmed)) {
+          out.push('<hr />');
+          i++;
+          continue;
+        }
+
+        // Heading
+        const hMatch = /^(#{1,4})\s+(.+)$/.exec(trimmed);
+        if (hMatch) {
+          const level = Math.min(4, Math.max(2, hMatch[1].length));
+          out.push(`<h${level}>${formatInlineMd(escapeHtml(hMatch[2]))}</h${level}>`);
+          i++;
+          continue;
+        }
+
+        // Markdown table
+        if (trimmed.includes('|') && i + 1 < lines.length && /^\s*\|?[\s:-]+\|[\s|:-]*$/.test(lines[i + 1])) {
+          const parseCells = row => row.trim().replace(/^\||\|$/g, '').split('|').map(c => formatInlineMd(escapeHtml(c.trim())));
+          const headers = parseCells(line);
+          i += 2;
+          const bodyRows = [];
+          while (i < lines.length && lines[i].trim().includes('|') && lines[i].trim() !== '') {
+            bodyRows.push(parseCells(lines[i]));
+            i++;
+          }
+          out.push(
+            `<table><thead><tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr></thead>` +
+            `<tbody>${bodyRows.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`).join('')}</tbody></table>`
+          );
+          continue;
+        }
+
+        // Unordered list
+        if (/^[-*•]\s+/.test(trimmed)) {
+          const items = [];
+          while (i < lines.length && /^\s*[-*•]\s+/.test(lines[i])) {
+            items.push(formatInlineMd(escapeHtml(lines[i].replace(/^\s*[-*•]\s+/, '').trim())));
+            i++;
+          }
+          out.push(`<ul>${items.map(it => `<li>${it}</li>`).join('')}</ul>`);
+          continue;
+        }
+
+        // Ordered list
+        if (/^\d+\.\s+/.test(trimmed)) {
+          const items = [];
+          while (i < lines.length && /^\s*\d+\.\s+/.test(lines[i])) {
+            items.push(formatInlineMd(escapeHtml(lines[i].replace(/^\s*\d+\.\s+/, '').trim())));
+            i++;
+          }
+          out.push(`<ol>${items.map(it => `<li>${it}</li>`).join('')}</ol>`);
+          continue;
+        }
+
+        // Blockquote
+        if (trimmed.startsWith('>')) {
+          const qLines = [];
+          while (i < lines.length && lines[i].trim().startsWith('>')) {
+            qLines.push(formatInlineMd(escapeHtml(lines[i].trim().replace(/^>\s?/, ''))));
+            i++;
+          }
+          out.push(`<blockquote>${qLines.join('<br />')}</blockquote>`);
+          continue;
+        }
+
+        // Paragraph
+        const pLines = [];
+        while (
+          i < lines.length &&
+          lines[i].trim() !== '' &&
+          !lines[i].trim().startsWith('```') &&
+          !/^(#{1,4})\s+/.test(lines[i].trim()) &&
+          !/^[-*•]\s+/.test(lines[i].trim()) &&
+          !/^\d+\.\s+/.test(lines[i].trim()) &&
+          !/^(-{3,}|\*{3,})$/.test(lines[i].trim()) &&
+          !lines[i].trim().startsWith('>')
+        ) {
+          pLines.push(formatInlineMd(escapeHtml(lines[i].trim())));
+          i++;
+        }
+        out.push(`<p>${pLines.join('<br />')}</p>`);
+      }
+
+      return out.join('');
+    }
+
+    let threads = [];
+    let activeThreadId = '';
+
+    function applyStatePayload(data) {
+      threads = data.threads || [];
+      activeThreadId = data.activeThreadId || (threads[0] ? threads[0].id : '');
+      messages = data.messages || [];
+      const titleEl = document.getElementById('headerThreadTitle');
+      if (titleEl && data.activeThreadTitle) {
+        titleEl.textContent = cleanFileName(data.activeThreadTitle);
+      }
+      renderThreads();
+      renderMessages();
+    }
+
+    function renderThreads() {
+      const listEl = document.getElementById('threadList');
+      if (!listEl) return;
+      const dayKey = date => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+      const today = new Date();
+      const yesterday = new Date(today);
+      yesterday.setDate(today.getDate() - 1);
+      let lastDay = '';
+      listEl.innerHTML = threads.map(t => {
+        const isActive = t.id === activeThreadId;
+        const timestamp = t.updatedAtIso ? new Date(t.updatedAtIso) : null;
+        const validTime = timestamp && !Number.isNaN(timestamp.getTime());
+        const day = validTime ? dayKey(timestamp) : 'unknown';
+        const dayLabel = !validTime ? '日期未记录'
+          : `${day === dayKey(today) ? '今天 · ' : day === dayKey(yesterday) ? '昨天 · ' : ''}${timestamp.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' })}`;
+        const heading = day !== lastDay ? `<div class="px-2 pt-3 pb-1 text-[11px] font-medium t-text-muted">${escapeHtml(dayLabel)}</div>` : '';
+        lastDay = day;
+        const timeLabel = validTime
+          ? timestamp.toLocaleTimeString('zh-CN', { hour12: false, hour: '2-digit', minute: '2-digit' })
+          : (t.updatedAt || '');
+        return `
+          ${heading}
+          <div
+            onclick="selectThread('${t.id}')"
+            class="group w-full text-left px-2.5 py-2 rounded-lg cursor-pointer ${isActive ? 't-pill-active font-medium' : 't-pill'} text-[12.5px] flex items-center justify-between gap-2 transition"
+          >
+            <span class="truncate">${escapeHtml(cleanFileName(t.title || '新建筑设计会话'))}</span>
+            <div class="flex items-center gap-1.5 shrink-0">
+              <time class="text-[10.5px] t-text-muted group-hover:hidden" ${validTime ? `datetime="${escapeHtml(t.updatedAtIso)}" title="${escapeHtml(timestamp.toLocaleString('zh-CN'))}"` : ''}>${escapeHtml(timeLabel)}</time>
+              ${threads.length > 1 ? `
+                <button
+                  onclick="deleteThread(event, '${t.id}')"
+                  title="删除会话"
+                  class="hidden group-hover:inline-flex items-center justify-center w-4 h-4 rounded hover:bg-red-500/20 hover:text-red-400 t-text-muted text-[11px]"
+                >✕</button>
+              ` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function openSettings() {
+      try {
+        const res = await fetch('/api/settings');
+        const s = await res.json();
+        document.getElementById('systemPromptInput').value = s.systemPrompt || '';
+      } catch (e) {}
+      const m = document.getElementById('settingsModal');
+      m.classList.remove('hidden');
+      m.classList.add('flex');
+    }
+
+    function closeSettings() {
+      const m = document.getElementById('settingsModal');
+      m.classList.add('hidden');
+      m.classList.remove('flex');
+    }
+
+    async function saveSettings() {
+      const systemPrompt = document.getElementById('systemPromptInput').value;
+      await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ systemPrompt })
+      });
+      closeSettings();
+    }
+
+    async function loadChat() {
+      const res = await fetch('/api/chat');
+      const data = await res.json();
+      applyStatePayload(data);
+    }
+
+    async function loadModels() {
+      const res = await fetch('/api/models');
+      if (!res.ok) throw new Error('模型清单读取失败');
+      const catalog = await res.json();
+      for (const [id, items, empty] of [
+        ['brainModelSelect', catalog.brains, '未配置对话模型'],
+        ['modelSelect', catalog.images, '未配置生图模型']
+      ]) {
+        const select = document.getElementById(id);
+        select.replaceChildren();
+        if (!items?.length) {
+          select.add(new Option(empty, ''));
+          select.disabled = true;
+        } else {
+          items.forEach(item => select.add(new Option(item.label, item.id)));
+          select.title = `${items[0].label} · ${items[0].model}`;
+          select.onchange = () => {
+            const selected = items.find(item => item.id === select.value);
+            select.title = selected ? `${selected.label} · ${selected.model}` : '';
+          };
+        }
+      }
+    }
+
+    async function createNewThread() {
+      const res = await fetch('/api/threads/new', { method: 'POST' });
+      const data = await res.json();
+      applyStatePayload(data);
+      const input = document.getElementById('chatInput');
+      if (input) input.focus();
+    }
+
+    async function selectThread(threadId) {
+      const res = await fetch('/api/threads/select', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ threadId })
+      });
+      const data = await res.json();
+      applyStatePayload(data);
+    }
+
+    async function deleteThread(e, threadId) {
+      e.stopPropagation();
+      const res = await fetch('/api/threads/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ threadId })
+      });
+      const data = await res.json();
+      applyStatePayload(data);
+    }
+
+    async function sendMessage() {
+      const input = document.getElementById('chatInput');
+      const text = input.value.trim();
+      if (!text && pendingAttachments.length === 0) return;
+
+      const sendBtn = document.getElementById('sendBtn');
+      if (sendBtn.disabled) return;
+      const brainModel = document.getElementById('brainModelSelect').value;
+      if (!brainModel) {
+        alert('请先在 .env 配置对话模型密钥，然后重启服务。');
+        return;
+      }
+      const model = document.getElementById('modelSelect').value;
+      const attachmentsToSend = [...pendingAttachments];
+      const targetUrlToSend = pinnedTargetImageUrl;
+      const targetTitleToSend = pinnedTargetTitle;
+
+      input.value = '';
+      pendingAttachments = [];
+      clearPinnedImage();
+      sendBtn.disabled = true;
+
+      messages.push({
+        id: 'temp-user',
+        role: 'user',
+        text: text || `Attached ${attachmentsToSend.map(x => x.name).join(', ')}`,
+        detectedFiles: [],
+        createdAt: 'Now'
+      });
+      messages.push({
+        id: 'temp-loading',
+        role: 'assistant',
+        text: '正在分析需求并调用建筑工具…',
+        steps: [],
+        results: []
+      });
+      renderMessages();
+
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            threadId: activeThreadId,
+            message: text,
+            brainModel,
+            model,
+            sceneLighting: currentSceneLighting,
+            uploadedFiles: attachmentsToSend,
+            targetImageUrl: targetUrlToSend
+          })
+        });
+        const data = await res.json();
+        if (!res.ok || data.error) {
+          throw new Error(data.error || 'Request failed');
+        }
+        applyStatePayload(data);
+      } catch (err) {
+        input.value = input.value ? `${text}\n${input.value}` : text;
+        pendingAttachments = [...attachmentsToSend, ...pendingAttachments];
+        if (targetUrlToSend && !pinnedTargetImageUrl) {
+          pinnedTargetImageUrl = targetUrlToSend;
+          pinnedTargetTitle = targetTitleToSend;
+        }
+        renderAttachmentBar();
+        alert('Error: ' + err.message);
+        await loadChat();
+      } finally {
+        sendBtn.disabled = false;
+      }
+    }
+
+    loadModels().catch(err => alert(err.message));
+    loadChat();
+  </script>
+</body>
+</html>
