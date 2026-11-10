@@ -1,0 +1,25 @@
+# Local credentials and model configuration
+.env
+.env.*
+!.env.example
+# Legacy local configuration; no longer read by the app
+/models.local.json
+
+# Dependencies and generated Python files
+/node_modules/
+__pycache__/
+*.py[cod]
+.venv/
+
+# User uploads, generated assets, and local data
+/public/uploads/
+/chat_threads.json
+/chat_messages.json
+/history.json
+/agent_settings.json
+
+# Runtime and editor files
+*.log
+*.tmp
+.DS_Store
+/.idea/
